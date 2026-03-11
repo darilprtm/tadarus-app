@@ -4,8 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, OAuthProvider, GoogleAuthProvider, signInWithCredential, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure({
+    webClientId: '764554736649-ffopphpovervorl675sv9ibnfpfpes84.apps.googleusercontent.com',
+});
 
 export default function LoginScreen() {
     const insets = useSafeAreaInsets();
@@ -31,8 +37,72 @@ export default function LoginScreen() {
         }
     };
 
-    const handleGoogleApple = () => {
-        Alert.alert("Segera Hadir", "Sistem autentikasi Google dan Apple sedang dalam tahap integrasi Security Sandbox.");
+    const handleGoogleLogin = async () => {
+        try {
+            setLoading(true);
+            setError('');
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            const idToken = userInfo.data?.idToken || (userInfo as any).idToken;
+
+            if (idToken) {
+                const credential = GoogleAuthProvider.credential(idToken);
+                await signInWithCredential(auth, credential);
+                router.replace('/(tabs)');
+            } else {
+                throw new Error('Gagal mendapatkan ID Token dari Google.');
+            }
+        } catch (error: any) {
+            setError('Google Sign-In Error: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAppleLogin = async () => {
+        try {
+            setLoading(true);
+            setError('');
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
+            });
+
+            if (credential.identityToken) {
+                const provider = new OAuthProvider('apple.com');
+                const authCredential = provider.credential({
+                    idToken: credential.identityToken,
+                });
+                await signInWithCredential(auth, authCredential);
+                router.replace('/(tabs)');
+            } else {
+                throw new Error('Gagal mendapatkan token dari Apple.');
+            }
+        } catch (e: any) {
+            if (e.code !== 'ERR_REQUEST_CANCELED') {
+                setError('Apple Sign-In Error: ' + e.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            Alert.alert("Perhatian", "Silakan masukkan alamat email Bosku terlebih dahulu di kolom email.");
+            return;
+        }
+        try {
+            setLoading(true);
+            await sendPasswordResetEmail(auth, email.trim());
+            Alert.alert("Berhasil", "Link reset password telah dikirim ke email Bosku. Silakan cek Inbox atau Folder Spam.");
+        } catch (error: any) {
+            Alert.alert("Error", error.message || "Gagal mengirim link reset password.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -87,7 +157,7 @@ export default function LoginScreen() {
                             </View>
                         </View>
 
-                        <Pressable style={styles.forgotPassword}>
+                        <Pressable onPress={handleForgotPassword} style={styles.forgotPassword}>
                             <Text style={styles.forgotText}>Lupa Password?</Text>
                         </Pressable>
 
@@ -105,14 +175,16 @@ export default function LoginScreen() {
                     </View>
 
                     <View style={styles.socialAuthBox}>
-                        <Pressable onPress={handleGoogleApple} style={styles.socialButton}>
+                        <Pressable onPress={handleGoogleLogin} style={styles.socialButton} disabled={loading}>
                             <Ionicons name="logo-google" size={20} color="#0f172a" />
                             <Text style={styles.socialText}>Google</Text>
                         </Pressable>
-                        <Pressable onPress={handleGoogleApple} style={styles.socialButton}>
-                            <Ionicons name="logo-apple" size={20} color="#0f172a" />
-                            <Text style={styles.socialText}>Apple</Text>
-                        </Pressable>
+                        {Platform.OS === 'ios' && (
+                            <Pressable onPress={handleAppleLogin} style={styles.socialButton} disabled={loading}>
+                                <Ionicons name="logo-apple" size={20} color="#0f172a" />
+                                <Text style={styles.socialText}>Apple</Text>
+                            </Pressable>
+                        )}
                     </View>
 
                     <View style={styles.footerSection}>

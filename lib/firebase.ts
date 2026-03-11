@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 
 // Initialize Firebase using environment variables (Fallback to dummy to prevent crash)
 const firebaseConfig = {
-    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "dummy-api-key",
-    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "dummy-domain.firebaseapp.com",
-    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "dummy-project",
-    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "dummy-bucket.appspot.com",
-    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "000000000",
-    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:000000000:web:000000000",
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "AIzaSyCy1pwuON7MnGnOFP3gBa3NTz1GbmX9Mzg",
+    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "tadarus-id.firebaseapp.com",
+    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "tadarus-id",
+    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "tadarus-id.firebasestorage.app",
+    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "764554736649",
+    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:764554736649:ios:feed1e738fd6ea59ee74d8",
 };
 
 let app;
